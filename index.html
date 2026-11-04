@@ -38,10 +38,13 @@
         .blog-link { background: #f0f9ff; padding: 20px; border-radius: 6px; text-decoration: none; color: #1a3a52; transition: transform 0.2s, box-shadow 0.2s; }
         .blog-link:hover { transform: translateY(-4px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
         .blog-link h4 { color: #f59e0b; margin-bottom: 8px; }
-        form { background: #f9fafb; padding: 30px; border-radius: 8px; max-width: 500px; margin: 20px auto; }
-        form input, form textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px; font-family: inherit; }
+        form { background: #f9fafb; padding: 30px; border-radius: 8px; max-width: 500px; margin: 20px auto; position: relative; }
+        form input, form textarea, form select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px; font-family: inherit; background: #fff; }
         form button { background: #f59e0b; color: white; padding: 15px 30px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; width: 100%; }
         form button:hover { background: #d97706; }
+        form button:disabled { opacity: 0.7; cursor: not-allowed; }
+        .hp-field { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+        .form-status { margin-top: 12px; text-align: center; font-weight: 600; }
         footer { background: #1a3a52; color: white; text-align: center; padding: 30px 0; margin-top: 40px; }
         .sticky-call { position: sticky; top: 0; background: #f59e0b; color: white; padding: 15px; text-align: center; font-weight: bold; z-index: 100; }
         .sticky-call a { color: white; text-decoration: none; }
@@ -174,10 +177,24 @@
         <section id="contact">
             <h2>Get Your Free Well Service Estimate</h2>
             <p style="text-align: center; margin-bottom: 20px;">Fill out the form below and we'll contact you within 1 hour during business hours.</p>
-            <form action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
-                <input type="text" name="name" placeholder="Your Name" required>
-                <input type="email" name="email" placeholder="Your Email" required>
-                <input type="tel" name="phone" placeholder="Your Phone Number" required>
+            <form id="leadForm" class="lead-form" method="post">
+                <div class="hp-field" aria-hidden="true">
+                    <label for="company_website">Company website</label>
+                    <input type="text" id="company_website" name="company_website" tabindex="-1" autocomplete="off">
+                </div>
+                <input type="text" name="name" placeholder="Your Name" required autocomplete="name">
+                <input type="email" name="email" placeholder="Your Email" required autocomplete="email">
+                <input type="tel" name="phone" placeholder="Your Phone Number" required autocomplete="tel">
+                <select name="service">
+                    <option value="">Service needed</option>
+                    <option>New Well Drilling</option>
+                    <option>Pump Repair &amp; Replacement</option>
+                    <option>Pressure Tank Service</option>
+                    <option>Water Quality Testing</option>
+                    <option>Drought / Low-Yield Fixes</option>
+                    <option>System Maintenance</option>
+                </select>
+                <input type="text" name="area" placeholder="City or area" autocomplete="address-level2">
                 <textarea name="message" placeholder="Describe your well or pump issue (low pressure, no water, new well)..." rows="5" required></textarea>
                 <button type="submit">Request Free Estimate</button>
             </form>
@@ -253,5 +270,6 @@
   })();
   </script>
   <script src="https://www.tradedeskpro.com/js/tdp-lead-attribution.js" defer></script>
+  <script src="/js/tdp-leads.js" defer></script>
 </body>
 </html>
