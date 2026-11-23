@@ -137,13 +137,11 @@ function makeHarness() {
     return out;
   };
 
-  const location = {
-    href: 'https://hillcountrywelldrilling.com/?utm_source=test&utm_medium=cpc',
-    search: '?utm_source=test&utm_medium=cpc',
-    hostname: 'hillcountrywelldrilling.com',
-  };
   const window = {
-    location,
+    location: {
+      href: 'https://hillcountrywelldrilling.com/?utm_source=test&utm_medium=cpc',
+      search: '?utm_source=test&utm_medium=cpc',
+    },
     tdpLeadAttribution() {
       return {
         landing_url: 'https://hillcountrywelldrilling.com/?utm_source=test&utm_medium=cpc',
@@ -194,10 +192,6 @@ function makeHarness() {
     button,
     calls,
     submit,
-    setHost(host) {
-      location.hostname = host;
-      location.href = 'https://' + host + '/';
-    },
     setNow(ms) {
       now = 1_700_000_000_000 + ms;
     },
@@ -244,7 +238,7 @@ ok.setNow(4000);
 await ok.submit();
 assert(ok.calls.length === 1, 'one POST for a normal submit');
 const posted = bodyOf(ok.calls[0]);
-assert(ok.calls[0].url === 'https://www.tradedeskpro.com/api/leads', 'live host posts directly to TradeDeskPro /api/leads');
+assert(ok.calls[0].url === 'https://www.tradedeskpro.com/api/leads', 'posts to TradeDeskPro /api/leads');
 assert(posted.profile_id === PROFILE_ID, 'profile_id is the Deb profile');
 assert(posted.name === 'Ada Lovelace', 'name posted');
 assert(posted.phone === '(830) 465-3375', 'phone posted');
@@ -376,21 +370,6 @@ async function assertServiceLabel(label) {
 
 await assertServiceLabel(optionValues.find((value) => value === solarLabel));
 await assertServiceLabel(optionValues.find((value) => value === existingLabel));
-
-for (const label of [solarLabel, existingLabel]) {
-  const preview = makeHarness();
-  preview.setNow(4000);
-  preview.setHost('hillcountrywelldrilling-git-cu-e89b1d-freedom-banking-blueprint.vercel.app');
-  preview.fields.service.value = label;
-  preview.fields.message.value = 'Preview proxy check. Do not deliver this lead.';
-  await preview.submit();
-  assert(preview.calls.length === 1, label + ' on a preview host posts once');
-  assert(preview.calls[0].url === '/api/leads', label + ' on a preview host uses the same-origin proxy');
-  const body = bodyOf(preview.calls[0]);
-  assert(body.profile_id === PROFILE_ID, label + ' preview payload keeps the existing profile');
-  assert(body.source === 'hillcountrywelldrilling.com', label + ' preview payload keeps the site source');
-  assert(body.message.startsWith('Service: ' + label + '\n'), label + ' preview payload keeps the service label');
-}
 
 if (failed) {
   console.error(failed + ' assertion(s) failed');

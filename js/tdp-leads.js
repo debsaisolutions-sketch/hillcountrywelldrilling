@@ -14,7 +14,6 @@
 (function () {
   var API_URL = 'https://www.tradedeskpro.com/api/leads';
   var PROFILE_ID = '63e7470e-fe1e-4367-aae0-56d0d6392d78';
-  var LIVE_HOSTS = ['hillcountrywelldrilling.com', 'www.hillcountrywelldrilling.com'];
   var SOURCE = 'hillcountrywelldrilling.com';
   var PHONE_FALLBACK = '(830) 465-3375';
   var MIN_FILL_MS = 3000;
@@ -107,19 +106,6 @@
     );
   }
 
-  function leadApiUrl() {
-    var host = '';
-    try {
-      host = String(window.location.hostname || '').toLowerCase();
-    } catch (e) {
-      host = '';
-    }
-    // TradeDeskPro only accepts the production host. Preview hostnames post
-    // same-origin, and /api/leads forwards them with that allowed origin.
-    if (!host || LIVE_HOSTS.indexOf(host) !== -1) return API_URL;
-    return '/api/leads';
-  }
-
   async function submitLead(payload) {
     var body = {
       name: payload.name,
@@ -135,7 +121,7 @@
       if (extra[key] && !body[key]) body[key] = extra[key];
     });
 
-    var res = await fetch(leadApiUrl(), {
+    var res = await fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
