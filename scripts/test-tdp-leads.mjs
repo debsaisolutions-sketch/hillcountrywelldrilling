@@ -304,6 +304,73 @@ plain.fields.area.value = '';
 await plain.submit();
 assert(bodyOf(plain.calls[0]).message === 'No water at the house.', 'message stays plain when service and area are empty');
 
+const page = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+
+function decode(text) {
+  return text.replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ').trim();
+}
+
+function serviceOptionValues(html) {
+  const select = html.match(/<select name="service">([\s\S]*?)<\/select>/);
+  if (!select) throw new Error('service dropdown missing from homepage');
+  return [...select[1].matchAll(/<option([^>]*)>([^<]*)<\/option>/g)]
+    .map((match) => {
+      const valueAttr = match[1].match(/\bvalue="([^"]*)"/);
+      const text = decode(match[2]);
+      return valueAttr ? decode(valueAttr[1]) : text;
+    })
+    .filter(Boolean);
+}
+
+const optionValues = serviceOptionValues(page);
+const solarLabel = 'Solar-Powered Well Pump';
+const existingLabel = 'Pump Repair & Replacement';
+assert(optionValues.includes(solarLabel), 'homepage dropdown includes Solar-Powered Well Pump');
+assert(optionValues.includes(existingLabel), 'homepage dropdown still includes Pump Repair & Replacement');
+assert(page.includes('<h1>Hill Country Well Drilling</h1>'), 'Hill Country Well Drilling brand stays visible');
+assert(
+  page.includes('Water Well Drilling in Kerrville, Hunt &amp; the Texas Hill Country'),
+  'hero subheading names water well drilling in Kerrville, Hunt, and the Texas Hill Country'
+);
+assert(page.includes('<title>Hill Country Well Drilling | Water well drilling and solar-powered well pumps | Kerrville TX</title>'), 'title mentions water well drilling and solar-powered well pumps');
+assert(
+  page.includes('Water well drilling and solar-powered well pumps across Kerrville, Hunt, and the Texas Hill Country.'),
+  'meta description mentions water well drilling and solar-powered well pumps'
+);
+assert(page.includes('Solar-Powered Water Well Pumps'), 'solar service card heading is present');
+assert(
+  page.includes('Need to get water to a part of your property where electricity is hard to reach? Tell us where your property is, whether you already have a water well or need one drilled, and what you need the water for.'),
+  'solar service card uses the requested copy'
+);
+assert(
+  page.includes('href="#contact"') && page.includes('Request a solar well pump estimate.'),
+  'solar CTA links to the existing estimate form'
+);
+assert(page.includes('(830) 465-3375'), 'existing phone number is unchanged');
+assert(page.includes('data-bot-name="Grace"'), 'Grace chat widget remains');
+assert(page.includes('data-agent-id="agent_830bfd70ac375ce5e4b1c83fa5"'), 'Retell agent remains');
+assert(!page.includes('367-4918') && !page.includes('hcwaterwelldrilling.com'), 'reference site contact details are not copied');
+
+async function assertServiceLabel(label) {
+  const harness = makeHarness();
+  harness.setNow(4000);
+  harness.fields.service.value = label;
+  harness.fields.area.value = 'Hunt';
+  harness.fields.message.value = 'Local mock only. Do not deliver this lead.';
+  await harness.submit();
+  assert(harness.calls.length === 1, label + ' posts once through the mocked handler');
+  assert(harness.calls[0].url === 'https://www.tradedeskpro.com/api/leads', label + ' still uses TradeDeskPro /api/leads');
+  const body = bodyOf(harness.calls[0]);
+  assert(body.profile_id === PROFILE_ID, label + ' keeps the existing TradeDeskPro Inbox profile');
+  assert(body.source === 'hillcountrywelldrilling.com', label + ' keeps the existing source');
+  assert(body.message.startsWith('Service: ' + label + '\n'), label + ' label is the service line on the lead');
+  assert(body.message.includes('Area: Hunt'), label + ' still includes the area field');
+  assert(body.phone === '(830) 465-3375', label + ' does not change the phone field');
+}
+
+await assertServiceLabel(optionValues.find((value) => value === solarLabel));
+await assertServiceLabel(optionValues.find((value) => value === existingLabel));
+
 if (failed) {
   console.error(failed + ' assertion(s) failed');
   process.exit(1);
