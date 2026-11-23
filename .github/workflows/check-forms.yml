@@ -13,3 +13,5 @@ jobs:
         run: python3 scripts/check-lead-forms.py
       - name: Mocked lead submit
         run: node scripts/test-tdp-leads.mjs
+      - name: Preview lead proxy
+        run: node scripts/test-preview-lead-proxy.mjs
